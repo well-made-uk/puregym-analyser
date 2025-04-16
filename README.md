@@ -1,6 +1,8 @@
 # PureGym Price Scraper
 
-This Node.js script scrapes pricing information from all active PureGym locations in the UK.
+I travel a lot in the UK and wanted to join PureGym due to the number of locations in their network. Their Premium membership allows entry at any gym at the same price or below, but they do not provide any way to view which other gyms will be included in a chosen price bracket.
+
+This Node.js script scrapes pricing information from all active PureGym locations to allow for a more educated choice of which "home gym" to join.
 
 ## Requirements
 
@@ -40,3 +42,5 @@ The output JSON file will contain an array of objects with the following structu
 ```
 
 Note: If there's an error processing a particular gym, the price and address will be null and an error message will be included.
+
+I've also added a little tool to output the results in a more useful format (`price-analyzer.js`) and a little HTML page that lets you filter a map of gyms by price.
