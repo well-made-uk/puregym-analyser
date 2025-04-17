@@ -1,46 +1,79 @@
-# PureGym Price Scraper
+# PureGym Price Map
 
-I travel a lot in the UK and wanted to join PureGym due to the number of locations in their network. Their Premium membership allows entry at any gym at the same price or below, but they do not provide any way to view which other gyms will be included in a chosen price bracket.
+An interactive map tool that helps you find the best value PureGym membership for your area. View gym locations, filter by price, and see which gyms you can access with a Premium membership.
 
-This Node.js script scrapes pricing information from all active PureGym locations to allow for a more educated choice of which "home gym" to join.
+## 🎯 Features
 
-## Requirements
+- **Interactive Map**: See all PureGym locations across the UK
+- **Price Filter**: Filter gyms by monthly membership price
+- **Premium Access**: Easily see which gyms you can access with your membership
+- **Detailed Information**: Click on any gym to see its details, price, and direct link
+- **Mobile Friendly**: Works great on both desktop and mobile devices
 
-- Node.js
-- npm
+## 🚀 Live Demo
 
-## Installation
+Visit the live site at: [PureGym Price Map](https://puregym.well-made.uk)
 
-```bash
-npm install
-```
+## 💡 How It Works
 
-## Usage
+1. Use the price slider to set your maximum monthly budget
+2. Click on any pin to see detailed gym information
+3. The map will show you all gyms available at or below your selected price
+4. Premium memberships allow access to any gym at or below your home gym's price
 
-Run the script with:
+## 🛠️ Developer Information
 
-```bash
-node scraper.js
-```
+### Prerequisites
 
-The script will:
-1. Visit the PureGym locations page
-2. Collect all active gym locations (excluding "opening soon" locations)
-3. Visit each gym's page to collect:
-   - Membership price
-   - Address
-4. Save the results in `gym-prices.json`
+- Node.js 14+
+- A modern web browser
 
-The output JSON file will contain an array of objects with the following structure:
-```json
-{
-  "name": "Gym Name",
-  "url": "https://www.puregym.com/gyms/location",
-  "price": 19.99,
-  "address": "123 Example Street, City, Postcode"
-}
-```
+### Local Development
 
-Note: If there's an error processing a particular gym, the price and address will be null and an error message will be included.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/well-made-uk/puregym-analyser.git
+   cd puregym-analyser
+   ```
 
-I've also added a little tool to output the results in a more useful format (`price-analyzer.js`) and a little HTML page that lets you filter a map of gyms by price.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Run the scraper to update gym data:
+   ```bash
+   node scraper.js
+   ```
+   This will create/update `gym-prices.json` with the latest gym information.
+
+4. Start a local server:
+   ```bash
+   python -m http.server 8080
+   # or use any other static file server
+   ```
+
+5. Visit `http://localhost:8080` in your browser
+
+### Project Structure
+
+- `index.html` - Main application with map interface
+- `scraper.js` - Scrapes PureGym website for location and price data
+- `price-analyzer.js` - Analyzes price data and generates statistics
+- `gym-prices.json` - Generated data file with gym information
+
+## 📝 Notes
+
+- Data is scraped from the PureGym website and is not officially affiliated with PureGym
+- Prices and locations are updated periodically but may not reflect real-time changes
+- Some gyms might not appear on the map due to address lookup limitations
+
+## 📜 License
+
+MIT License - See LICENSE file for details
+
+## 🙏 Credits
+
+Created by [Ben Found](https://well-made.uk)
+
+Uses [Leaflet](https://leafletjs.com/) for mapping and [Tailwind CSS](https://tailwindcss.com/) for styling.
