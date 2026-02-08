@@ -1,314 +1,416 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PureGym Price Map</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <style>
-        #map {
-            height: 600px;
-            width: 100%;
-            border-radius: 0.5rem;
-        }
-        @media (min-width: 1024px) {
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PureGym Price Map</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+        />
+        <style>
             #map {
-                height: 700px;
+                height: 600px;
+                width: 100%;
+                border-radius: 0.5rem;
             }
-        }
-        .selected-marker {
-            background-color: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-        }
-        .marker-icon {
-            filter: drop-shadow(0 1px 4px rgba(0,0,0,.3));
-        }
-        /* Marker styles */
-        .marker-hover img {
-            filter: brightness(1.3);
-            transition: all 0.2s ease;
-        }
-        .marker-selected img {
-            filter: hue-rotate(140deg) saturate(1.5);
-            transition: all 0.2s ease;
-        }
-    </style>
-</head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8 max-w-4xl">
-            <h1 class="text-3xl font-bold text-gray-800 mb-5">PureGym Premium Membership Map</h1>
+            @media (min-width: 1024px) {
+                #map {
+                    height: 700px;
+                }
+            }
+            .selected-marker {
+                background-color: #f0f9ff;
+                border-left: 4px solid #3b82f6;
+            }
+            .marker-icon {
+                filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
+            }
+            /* Marker styles */
+            .marker-hover img {
+                filter: brightness(1.3);
+                transition: all 0.2s ease;
+            }
+            .marker-selected img {
+                filter: hue-rotate(140deg) saturate(1.5);
+                transition: all 0.2s ease;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100">
+        <div class="container mx-auto px-4 py-8">
+            <header class="mb-8 max-w-4xl">
+                <h1 class="text-3xl font-bold text-gray-800 mb-5">
+                    PureGym Premium Membership Map
+                </h1>
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <p class="text-gray-600 mb-3">
+                        Just a lil' tool that plots PureGym locations on a map -
+                        with a price filter!
+                    </p>
+                    <p class="text-gray-600 mb-3">
+                        PureGym Premium memberships allow you to access any gym
+                        in the network at the same price or below your home
+                        gym's price. The main intended use of this tool is to
+                        help you find the right price to join at. It can also
+                        help you find the accessible gyms in your area when you
+                        travel within the UK.
+                    </p>
+                    <p class="text-gray-600">
+                        The data used in this tool is scraped from the PureGym
+                        website and is not affiliated with PureGym in any way.
+                    </p>
+                </div>
+            </header>
+
             <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <p class="text-gray-600 mb-3">Just a lil' tool that plots PureGym locations on a map - with a price filter!</p>
-                <p class="text-gray-600 mb-3">PureGym Premium memberships allow you to access any gym in the network at the same price or below your home gym's price. The main intended use of this tool is to help you find the right price to join at. It can also help you find the accessible gyms in your area when you travel within the UK.</p>
-                <p class="text-gray-600">The data used in this tool is scraped from the PureGym website and is not affiliated with PureGym in any way.</p>
-            </div>
-        </header>
+                <!-- Price Filter Section -->
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6"
+                >
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center gap-4 flex-1"
+                    >
+                        <label
+                            for="priceRange"
+                            class="text-gray-700 font-medium whitespace-nowrap"
+                            >Maximum Monthly Price:</label
+                        >
+                        <div class="flex items-center gap-4 flex-1">
+                            <input
+                                type="range"
+                                id="priceRange"
+                                min="20"
+                                max="50"
+                                step="1"
+                                value="50"
+                                class="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span
+                                id="selectedPrice"
+                                class="text-lg font-semibold text-blue-600 w-20 text-right"
+                                >£50.99</span
+                            >
+                        </div>
+                    </div>
+                    <span id="map-stats" class="font-medium"></span>
+                </div>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <!-- Price Filter Section -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
-                    <label for="priceRange" class="text-gray-700 font-medium whitespace-nowrap">Maximum Monthly Price:</label>
-                    <div class="flex items-center gap-4 flex-1">
-                        <input type="range" id="priceRange" min="20" max="50" step="1" value="50" 
-                            class="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer">
-                        <span id="selectedPrice" class="text-lg font-semibold text-blue-600 w-20 text-right">£50.99</span>
+                <!-- Map and Details Container -->
+                <div class="lg:flex lg:gap-6">
+                    <!-- Map Container -->
+                    <div class="lg:flex-1">
+                        <div id="map" class="mb-4 lg:mb-0"></div>
+                    </div>
+
+                    <!-- Gym Details Panel -->
+                    <div
+                        id="gymDetails"
+                        class="lg:w-80 bg-gray-50 rounded-lg p-4 hidden"
+                    >
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">
+                            Gym Details
+                        </h3>
+                        <div id="gymDetailsContent" class="space-y-4">
+                            <!-- Content will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
-                <span id="map-stats" class="font-medium"></span>
-            </div>
 
-            <!-- Map and Details Container -->
-            <div class="lg:flex lg:gap-6">
-                <!-- Map Container -->
-                <div class="lg:flex-1">
-                    <div id="map" class="mb-4 lg:mb-0"></div>
-                </div>
-
-                <!-- Gym Details Panel -->
-                <div id="gymDetails" class="lg:w-80 bg-gray-50 rounded-lg p-4 hidden">
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Gym Details</h3>
-                    <div id="gymDetailsContent" class="space-y-4">
-                        <!-- Content will be populated by JavaScript -->
+                <div
+                    class="flex justify-between items-center text-sm text-gray-600 mt-4"
+                >
+                    <div>
+                        <span class="font-medium">Note:</span> Click on a pin to
+                        view gym details
                     </div>
                 </div>
             </div>
-            
-            <div class="flex justify-between items-center text-sm text-gray-600 mt-4">
-                <div>
-                    <span class="font-medium">Note:</span> Click on a pin to view gym details
+
+            <div id="unmapped-gyms" class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    Gyms not on the map
+                </h2>
+                <p class="text-gray-600 mb-4">
+                    These gyms are available within your price range but
+                    couldn't be mapped due to address lookup limitations:
+                </p>
+                <div class="overflow-x-auto -mx-6">
+                    <div class="inline-block min-w-full align-middle px-6">
+                        <table id="unmapped-gyms-table" class="min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                                    >
+                                        Gym Name
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                                    >
+                                        Address
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                                    >
+                                        Monthly Price
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                                    >
+                                        Link
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Table content will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
+            <footer class="mt-8 text-center text-gray-600 text-sm">
+                <p>
+                    Last updated:
+                    <span id="lastUpdated"><!--BUILD_DATE--></span>
+                </p>
+                <p class="mt-2">
+                    Created by
+                    <a
+                        target="_blank"
+                        href="https://well-made.uk"
+                        class="text-blue-600 hover:text-blue-900"
+                        >Ben Found (well-made.uk)</a
+                    >.
+                </p>
+            </footer>
         </div>
 
-        <div id="unmapped-gyms" class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Gyms not on the map</h2>
-            <p class="text-gray-600 mb-4">These gyms are available within your price range but couldn't be mapped due to address lookup limitations:</p>
-            <div class="overflow-x-auto -mx-6">
-                <div class="inline-block min-w-full align-middle px-6">
-                    <table id="unmapped-gyms-table" class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Gym Name</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Address</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Monthly Price</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Link</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <!-- Table content will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
-        <footer class="mt-8 text-center text-gray-600 text-sm">
-            <p>Last updated: <span id="lastUpdated"></span></p>
-            <p class="mt-2">Created by <a target="_blank" href="https://well-made.uk" class="text-blue-600 hover:text-blue-900">Ben Found (well-made.uk)</a>.</p>
-        </footer>
-    </div>
+        <script>
+            let map;
+            let markerClusterGroup;
+            let gyms = [];
+            let selectedMarker = null;
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    
-    <script>
-        let map;
-        let markerClusterGroup;
-        let gyms = [];
-        let selectedMarker = null;
+            // Custom marker icons
+            const defaultIcon = L.icon({
+                iconUrl:
+                    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+                shadowUrl:
+                    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+            });
 
-        // Custom marker icons
-        const defaultIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
+            const selectedIcon = L.icon({
+                iconUrl:
+                    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+                shadowUrl:
+                    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+            });
 
-        const selectedIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
+            function showGymDetails(gym, marker) {
+                const detailsPanel = document.getElementById("gymDetails");
+                const content = document.getElementById("gymDetailsContent");
 
-        function showGymDetails(gym, marker) {
-            const detailsPanel = document.getElementById('gymDetails');
-            const content = document.getElementById('gymDetailsContent');
-            
-            // Reset previous selected marker if any
-            if (selectedMarker && selectedMarker !== marker) {
-                selectedMarker.setIcon(defaultIcon);
-            }
-            
-            // Update selected marker
-            selectedMarker = marker;
-            marker.setIcon(selectedIcon);
-            
-            content.innerHTML = `
+                // Reset previous selected marker if any
+                if (selectedMarker && selectedMarker !== marker) {
+                    selectedMarker.setIcon(defaultIcon);
+                }
+
+                // Update selected marker
+                selectedMarker = marker;
+                marker.setIcon(selectedIcon);
+
+                content.innerHTML = `
                 <div class="space-y-4">
                     <div>
                         <h4 class="font-bold text-lg text-gray-900">${gym.name}</h4>
-                        <p class="text-gray-600">${gym.address || 'Address not available'}</p>
+                        <p class="text-gray-600">${gym.address || "Address not available"}</p>
                     </div>
                     <div class="bg-blue-50 p-3 rounded-lg">
                         <p class="text-lg font-semibold text-blue-700">£${gym.price.toFixed(2)}/month</p>
                         <p class="text-sm text-blue-600">Premium Membership</p>
                     </div>
-                    <a href="${gym.url}" 
-                       target="_blank" 
+                    <a href="${gym.url}"
+                       target="_blank"
                        class="block w-full text-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
                         View on PureGym
                     </a>
                 </div>
             `;
-            
-            detailsPanel.classList.remove('hidden');
-        }
 
-        function clearSelection() {
-            if (selectedMarker) {
-                selectedMarker.setIcon(defaultIcon);
-                selectedMarker = null;
+                detailsPanel.classList.remove("hidden");
             }
-            document.getElementById('gymDetails').classList.add('hidden');
-        }
 
-        async function initMap() {
-            map = L.map('map', {
-                center: [54.5, -4],
-                zoom: 6,
-                minZoom: 5,
-                maxZoom: 18
-            });
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: ' OpenStreetMap contributors'
-            }).addTo(map);
+            function clearSelection() {
+                if (selectedMarker) {
+                    selectedMarker.setIcon(defaultIcon);
+                    selectedMarker = null;
+                }
+                document.getElementById("gymDetails").classList.add("hidden");
+            }
 
-            markerClusterGroup = L.markerClusterGroup({
-                maxClusterRadius: 50,
-                spiderfyOnMaxZoom: true,
-                showCoverageOnHover: true,
-                zoomToBoundsOnClick: true,
-                disableClusteringAtZoom: 11,
-                chunkedLoading: true,
-                animate: true
-            });
-            map.addLayer(markerClusterGroup);
-
-            // Add click handler to clear selection when clicking on the map
-            map.on('click', clearSelection);
-            
-            // Also clear selection when clicking on a cluster
-            markerClusterGroup.on('clusterclick', clearSelection);
-
-            try {
-                const response = await fetch('gym-prices.json');
-                if (!response.ok) throw new Error('Failed to fetch gym data');
-                
-                gyms = await response.json();
-                if (!Array.isArray(gyms)) throw new Error('Invalid gym data format');
-
-                const lastUpdated = new Date().toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
+            async function initMap() {
+                map = L.map("map", {
+                    center: [54.5, -4],
+                    zoom: 6,
+                    minZoom: 5,
+                    maxZoom: 18,
                 });
-                document.getElementById('lastUpdated').textContent = lastUpdated;
 
-                const prices = gyms.filter(gym => gym && gym.price).map(gym => gym.price);
-                const minPrice = Math.floor(Math.min(...prices));
-                const maxPrice = Math.ceil(Math.max(...prices));
-                
-                const priceRange = document.getElementById('priceRange');
-                priceRange.min = Math.floor(minPrice);
-                priceRange.max = Math.ceil(maxPrice);
-                priceRange.value = maxPrice;
-                priceRange.step = 1;
-                
-                const displayPrice = Math.floor(maxPrice) + 0.99;
-                document.getElementById('selectedPrice').textContent = `£${displayPrice.toFixed(2)}`;
+                L.tileLayer(
+                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    {
+                        attribution: " OpenStreetMap contributors",
+                    },
+                ).addTo(map);
 
-                updateMap();
-            } catch (error) {
-                console.error('Error loading gym data:', error);
-                alert('Error loading gym data. Please try again later.');
+                markerClusterGroup = L.markerClusterGroup({
+                    maxClusterRadius: 50,
+                    spiderfyOnMaxZoom: true,
+                    showCoverageOnHover: true,
+                    zoomToBoundsOnClick: true,
+                    disableClusteringAtZoom: 11,
+                    chunkedLoading: true,
+                    animate: true,
+                });
+                map.addLayer(markerClusterGroup);
+
+                // Add click handler to clear selection when clicking on the map
+                map.on("click", clearSelection);
+
+                // Also clear selection when clicking on a cluster
+                markerClusterGroup.on("clusterclick", clearSelection);
+
+                try {
+                    const response = await fetch("gym-prices.json");
+                    if (!response.ok)
+                        throw new Error("Failed to fetch gym data");
+
+                    gyms = await response.json();
+                    if (!Array.isArray(gyms))
+                        throw new Error("Invalid gym data format");
+
+                    const prices = gyms
+                        .filter((gym) => gym && gym.price)
+                        .map((gym) => gym.price);
+                    const minPrice = Math.floor(Math.min(...prices));
+                    const maxPrice = Math.ceil(Math.max(...prices));
+
+                    const priceRange = document.getElementById("priceRange");
+                    priceRange.min = Math.floor(minPrice);
+                    priceRange.max = Math.ceil(maxPrice);
+                    priceRange.value = maxPrice;
+                    priceRange.step = 1;
+
+                    const displayPrice = Math.floor(maxPrice) + 0.99;
+                    document.getElementById("selectedPrice").textContent =
+                        `£${displayPrice.toFixed(2)}`;
+
+                    updateMap();
+                } catch (error) {
+                    console.error("Error loading gym data:", error);
+                    alert("Error loading gym data. Please try again later.");
+                }
             }
-        }
 
-        function updateMap() {
-            const basePrice = parseInt(document.getElementById('priceRange').value);
-            const priceRange = basePrice + 0.99;
-            document.getElementById('selectedPrice').textContent = `£${priceRange.toFixed(2)}`;
-            
-            markerClusterGroup.clearLayers();
-            const unmappedTable = document.querySelector('#unmapped-gyms-table tbody');
-            unmappedTable.innerHTML = '';
-            
-            let mappedCount = 0;
-            let unmappedCount = 0;
+            function updateMap() {
+                const basePrice = parseInt(
+                    document.getElementById("priceRange").value,
+                );
+                const priceRange = basePrice + 0.99;
+                document.getElementById("selectedPrice").textContent =
+                    `£${priceRange.toFixed(2)}`;
 
-            // Clear any existing selection
-            clearSelection();
-            
-            gyms.forEach(gym => {
-                if (!gym || !gym.price) return;
-                
-                if (gym.price <= priceRange) {
-                    if (gym.latitude && gym.longitude) {
-                        const marker = L.marker([gym.latitude, gym.longitude], {
-                            title: gym.name,
-                            icon: defaultIcon,
-                            riseOnHover: true
-                        });
-                        
-                        marker.on('click', function() {
-                            showGymDetails(gym, this);
-                            map.panTo(this.getLatLng());
-                        });
-                        
-                        markerClusterGroup.addLayer(marker);
-                        mappedCount++;
-                    } else {
-                        const row = unmappedTable.insertRow();
-                        row.innerHTML = `
+                markerClusterGroup.clearLayers();
+                const unmappedTable = document.querySelector(
+                    "#unmapped-gyms-table tbody",
+                );
+                unmappedTable.innerHTML = "";
+
+                let mappedCount = 0;
+                let unmappedCount = 0;
+
+                // Clear any existing selection
+                clearSelection();
+
+                gyms.forEach((gym) => {
+                    if (!gym || !gym.price) return;
+
+                    if (gym.price <= priceRange) {
+                        if (gym.latitude && gym.longitude) {
+                            const marker = L.marker(
+                                [gym.latitude, gym.longitude],
+                                {
+                                    title: gym.name,
+                                    icon: defaultIcon,
+                                    riseOnHover: true,
+                                },
+                            );
+
+                            marker.on("click", function () {
+                                showGymDetails(gym, this);
+                                map.panTo(this.getLatLng());
+                            });
+
+                            markerClusterGroup.addLayer(marker);
+                            mappedCount++;
+                        } else {
+                            const row = unmappedTable.insertRow();
+                            row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${gym.name}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${gym.address || 'Address not available'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${gym.address || "Address not available"}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">£${gym.price.toFixed(2)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <a href="${gym.url}" target="_blank" class="text-blue-600 hover:text-blue-900">View Gym</a>
                             </td>
                         `;
-                        unmappedCount++;
+                            unmappedCount++;
+                        }
                     }
+                });
+
+                const statsDiv = document.getElementById("map-stats");
+                if (statsDiv) {
+                    statsDiv.textContent = `Showing ${mappedCount} gyms on map, ${unmappedCount} unmapped gyms`;
                 }
-            });
 
-            const statsDiv = document.getElementById('map-stats');
-            if (statsDiv) {
-                statsDiv.textContent = `Showing ${mappedCount} gyms on map, ${unmappedCount} unmapped gyms`;
+                // Hide details panel when updating map
+                document.getElementById("gymDetails").classList.add("hidden");
+                if (selectedMarker) {
+                    selectedMarker.setIcon(defaultIcon);
+                    selectedMarker = null;
+                }
             }
 
-            // Hide details panel when updating map
-            document.getElementById('gymDetails').classList.add('hidden');
-            if (selectedMarker) {
-                selectedMarker.setIcon(defaultIcon);
-                selectedMarker = null;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', initMap);
-        document.getElementById('priceRange').addEventListener('input', updateMap);
-    </script>
-</body>
+            document.addEventListener("DOMContentLoaded", initMap);
+            document
+                .getElementById("priceRange")
+                .addEventListener("input", updateMap);
+        </script>
+    </body>
 </html>
